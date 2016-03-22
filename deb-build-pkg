@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# vim: ft=sh tw=80
+
+declare help="
+Script for building debian pkgs using resnullius/debian-devel docker's images.
+
+Usage:
+  deb-build-pkg run [-d <distro> ] [-v <version>] [-o <path>]
+  deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>]
+  deb-build-pkg --version
+  deb-build-pkg -h | --help
+
+Options:
+  -d          Distro to use (expects debian or ubuntu), defaults to debian.
+  -v          Version to use (expects unstable or xenial).
+  -o          Path to output directory.
+  -s          Path to source (where the debian directory is in), defaults to
+              current directory.
+  -h --help   Show this screen.
+  --version   Show versions.
+"
+
+declare version="
+Version: 1.0.0
+Licensed under the MIT terms.
+"
+
+declare ARCH
+ARCH="$(uname -m)"
+
+declare output_dir="${OUTPUT_DIR:-$PWD/../pkgs}"
+declare src_dir="${SRC_DIR:-$PWD}"
+declare distro="${DISTRO:-debian}"
+declare image_name="${IMAGE_NAME:-resnullius/debian-devel}"
+declare image_ver="${IMAGE_VER:-unstable}"
+declare entrypoint
+declare pkg_name
+
+initialize_dirs() {
+  [ -d "$output_dir" ] && output_dir=$(cd "$output_dir" && pwd)
+  [ -d "$src_dir" ] && src_dir=$(cd "$src_dir" && pwd)
+}
+
+grab_pkg_name() {
+  pkg_name=$(grep "Source:" "$src_dir"/debian/control | sed -e 's/Source: //')
+}
+
+eval_image_name() {
+  [ "$distro" = "ubuntu" ] && image_name="resnullius/ubuntu-devel"
+  if [ "$ARCH" != "x86_64" ]; then
+    image_name+="-armhf"
+  fi
+}
+
+eval_opts() {
+  while getopts ":d:v:o:s:e:" opt "$@"; do
+    case "$opt" in
+      d)
+        distro="$OPTARG";;
+      v)
+        image_ver="$OPTARG";;
+      o)
+        output_dir="$OPTARG";;
+      s)
+        src_dir="$OPTARG";;
+      e)
+        entrypoint="--entrypoint $OPTARG"
+        if [ "$OPTARG" == "/bin/bash" ]; then
+          entrypoint+=" -ti"
+        fi
+        shift; shift;;
+      \?)
+        echo "Invalid option -$OPTARG was ignored." >&2;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1;;
+    esac
+  done
+  initialize_dirs
+  grab_pkg_name
+  eval_image_name
+  echo "Will build version $image_ver for $pkg_name on $distro..."
+}
+
+run_docker() {
+  docker run \
+    $entrypoint \
+    --rm \
+    -v "$src_dir":/opt/src \
+    -v "$output_dir":/opt/pkgs \
+    "$image_name":"$image_ver" "$@"
+}
+
+build() {
+  eval_opts "$@"
+  run_docker "-p" "$pkg_name"
+}
+
+run() {
+  eval_opts "$@"
+  run_docker
+}
+
+print_version() {
+  echo "$version"
+}
+
+print_help() {
+  echo "$help"
+}
+
+main() {
+  set -eo pipefail; [ "$TRACE" ] && set -x
+  declare cmd="$1"
+  case "$cmd" in
+    -h|--help)          shift; print_help "$@";;
+    --version)          shift; print_version "$@";;
+    run)                shift; set - "$@" "-e" "/bin/bash"; run "$@";;
+    build)              shift; build "$@";;
+    *)                  print_help "$@";;
+  esac
+}
+
+main "$@"
