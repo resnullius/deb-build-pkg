@@ -7,6 +7,7 @@ Script for building debian pkgs using resnullius/debian-devel docker's images.
 Usage:
   deb-build-pkg run [-d <distro> ] [-v <version>] [-o <path>]
   deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>]
+  deb-build-pkg pack [-d <distro>] [-v <version>] [-o <path>] [-r <path>]
   deb-build-pkg --version
   deb-build-pkg -h | --help
 
@@ -14,6 +15,7 @@ Options:
   -d          Distro to use (expects debian or ubuntu), defaults to debian.
   -v          Version to use (expects unstable or xenial).
   -o          Path to output directory.
+  -r          Path to release output.
   -s          Path to source (where the debian directory is in), defaults to
               current directory.
   -h --help   Show this screen.
@@ -29,6 +31,7 @@ declare ARCH
 ARCH="$(uname -m)"
 
 declare output_dir="${OUTPUT_DIR:-$PWD/../pkgs}"
+declare rel_dir="${REL_DIR:-$PWD/../release}"
 declare src_dir="${SRC_DIR:-$PWD}"
 declare distro="${DISTRO:-debian}"
 declare image_name="${IMAGE_NAME:-resnullius/debian-devel}"
@@ -39,6 +42,7 @@ declare pkg_name
 initialize_dirs() {
   [ -d "$output_dir" ] && output_dir=$(cd "$output_dir" && pwd)
   [ -d "$src_dir" ] && src_dir=$(cd "$src_dir" && pwd)
+  [ -d "$rel_dir" ] && rel_dir=$(cd "$rel_dir" && pwd)
 }
 
 grab_pkg_name() {
@@ -61,6 +65,8 @@ eval_opts() {
         image_ver="$OPTARG";;
       o)
         output_dir="$OPTARG";;
+      r)
+        rel_dir="$OPTARG";;
       s)
         src_dir="$OPTARG";;
       e)
@@ -101,6 +107,12 @@ run() {
   run_docker
 }
 
+pack_for_release() {
+  eval_opts "$@"
+  tar -cJf "$rel_dir"/"$distro"-"$image_ver"-"$ARCH".tar.xz -C "$output_dir" .
+  sudo rm -rf "$output_dir"
+}
+
 print_version() {
   echo "$version"
 }
@@ -117,6 +129,7 @@ main() {
     --version)          shift; print_version "$@";;
     run)                shift; set - "$@" "-e" "/bin/bash"; run "$@";;
     build)              shift; build "$@";;
+    pack)               shift; pack_for_release "$@";;
     *)                  print_help "$@";;
   esac
 }
