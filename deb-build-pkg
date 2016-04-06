@@ -88,6 +88,10 @@ eval_opts() {
   echo "Will build version $image_ver for $pkg_name on $distro..."
 }
 
+pull_docker() {
+  docker pull "$image_name":"$image_ver"
+}
+
 run_docker() {
   docker run \
     $entrypoint \
@@ -99,11 +103,13 @@ run_docker() {
 
 build() {
   eval_opts "$@"
+  pull_docker
   run_docker "-p" "$pkg_name"
 }
 
 run() {
   eval_opts "$@"
+  pull_docker
   run_docker
 }
 
