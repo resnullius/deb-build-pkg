@@ -40,8 +40,10 @@ declare entrypoint
 declare pkg_name
 
 initialize_dirs() {
+  [ ! -d "$output_dir" ] && mkdir "$output_dir"
   [ -d "$output_dir" ] && output_dir=$(cd "$output_dir" && pwd)
   [ -d "$src_dir" ] && src_dir=$(cd "$src_dir" && pwd)
+  [ ! -d "$rel_dir" ] && mkdir "$rel_dir"
   [ -d "$rel_dir" ] && rel_dir=$(cd "$rel_dir" && pwd)
 }
 
@@ -88,6 +90,14 @@ eval_opts() {
   echo "Will build version $image_ver for $pkg_name on $distro..."
 }
 
+git_in() {
+  git checkout "$distro/$image_ver"
+}
+
+clear_out() {
+  git checkout master
+}
+
 pull_docker() {
   docker pull "$image_name":"$image_ver"
 }
@@ -103,14 +113,18 @@ run_docker() {
 
 build() {
   eval_opts "$@"
+  git_in
   pull_docker
   run_docker "-p" "$pkg_name"
+  clear_out
 }
 
 run() {
   eval_opts "$@"
+  git_in
   pull_docker
   run_docker
+  clear_out
 }
 
 pack_for_release() {
