@@ -8,10 +8,10 @@ Usage:
   deb-build-pkg run [-d <distro> ] [-v <version>] [-o <path>] [-x <repo>]
                 [-x <repo>] [-e <entrypoint>]
   deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>] [-x <repo>]
-                [-x <repo>]
+                [-x <repo>] [-g <keyid>]
   deb-build-pkg pack [-d <distro>] [-v <version>] [-o <path>] [-r <path>]
   deb-build-pkg bundle [-d <distro>] [-v <version>] [-o <path>]
-                [-r <path>] [-x <repo>] [-x <repo>]
+                [-r <path>] [-x <repo>] [-x <repo>] [-g <keyid>]
   deb-build-pkg --version
   deb-build-pkg -h | --help
 
@@ -25,12 +25,13 @@ Options:
   -e          Entrypoint for Docker cmdline.
   -x          Add extra repo, like: 'http://repo.org/repo dist section'.
               Multiple entries accepted.
+  -g          Add extra gpg keys to apt-key.
   -h --help   Show this screen.
   --version   Show versions.
 "
 
 declare version="
-Version: 1.2.0
+Version: 1.3.0
 Licensed under the MIT terms.
 "
 
@@ -47,6 +48,8 @@ declare entrypoint
 declare pkg_name
 declare -a extra_repos
 declare -a extra_repos_cmd
+declare -a extra_gpgs
+declare -a extra_gpgs_cmd
 
 initialize_dirs() {
   [ ! -d "$output_dir" ] && mkdir "$output_dir"
@@ -68,7 +71,7 @@ eval_image_name() {
 }
 
 eval_opts() {
-  while getopts ":d:v:o:s:e:x:" opt "$@"; do
+  while getopts ":d:v:g:o:s:e:x:" opt "$@"; do
     case "$opt" in
       d)
         distro="$OPTARG";;
@@ -82,6 +85,8 @@ eval_opts() {
         src_dir="$OPTARG";;
       x)
         extra_repos+=("$OPTARG");;
+      g)
+        extra_gpgs+=("$OPTARG");;
       e)
         entrypoint="--entrypoint $OPTARG"
         if [ "$OPTARG" == "/bin/bash" ]; then
@@ -119,6 +124,12 @@ build_extra_repos_cmd() {
   done
 }
 
+build_extra_gpgs_cmd() {
+  for key in "${extra_gpgs[@]}"; do
+    extra_gpgs_cmd+=("-g" "$key")
+  done
+}
+
 run_docker() {
   docker run \
     $entrypoint \
@@ -133,7 +144,8 @@ build() {
   git_in
   pull_docker
   build_extra_repos_cmd
-  run_docker "-p" "$pkg_name" "${extra_repos_cmd[@]}"
+  build_extra_gpgs_cmd
+  run_docker "-p" "$pkg_name" "${extra_repos_cmd[@]}" "${extra_gpgs_cmd[@]}"
   clear_out
 }
 
