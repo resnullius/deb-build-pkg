@@ -10,6 +10,8 @@ Usage:
   deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>] [-x <repo>]
                 [-x <repo>]
   deb-build-pkg pack [-d <distro>] [-v <version>] [-o <path>] [-r <path>]
+  deb-build-pkg bundle [-d <distro>] [-v <version>] [-o <path>]
+                [-r <path>] [-x <repo>] [-x <repo>]
   deb-build-pkg --version
   deb-build-pkg -h | --help
 
@@ -166,6 +168,7 @@ main() {
     run)                shift; set - "$@" "-e" "/bin/bash"; run "$@";;
     build)              shift; build "$@";;
     pack)               shift; pack_for_release "$@";;
+    bundle)             shift; build "$@"; pack_for_release "$@";;
     *)                  print_help "$@";;
   esac
 }
