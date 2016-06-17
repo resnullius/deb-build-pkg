@@ -5,8 +5,10 @@ declare help="
 Script for building debian pkgs using resnullius/debian-devel docker's images.
 
 Usage:
-  deb-build-pkg run [-d <distro> ] [-v <version>] [-o <path>]
-  deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>]
+  deb-build-pkg run [-d <distro> ] [-v <version>] [-o <path>] [-x <repo>]
+                [-x <repo>] [-e <entrypoint>]
+  deb-build-pkg build [-d <distro>] [-v <version>] [-o <path>] [-x <repo>]
+                [-x <repo>]
   deb-build-pkg pack [-d <distro>] [-v <version>] [-o <path>] [-r <path>]
   deb-build-pkg --version
   deb-build-pkg -h | --help
@@ -18,6 +20,9 @@ Options:
   -r          Path to release output.
   -s          Path to source (where the debian directory is in), defaults to
               current directory.
+  -e          Entrypoint for Docker cmdline.
+  -x          Add extra repo, like: 'http://repo.org/repo dist section'.
+              Multiple entries accepted.
   -h --help   Show this screen.
   --version   Show versions.
 "
@@ -38,6 +43,8 @@ declare image_name="${IMAGE_NAME:-resnullius/debian-devel}"
 declare image_ver="${IMAGE_VER:-unstable}"
 declare entrypoint
 declare pkg_name
+declare -a extra_repos
+declare -a extra_repos_cmd
 
 initialize_dirs() {
   [ ! -d "$output_dir" ] && mkdir "$output_dir"
@@ -59,7 +66,7 @@ eval_image_name() {
 }
 
 eval_opts() {
-  while getopts ":d:v:o:s:e:" opt "$@"; do
+  while getopts ":d:v:o:s:e:x:" opt "$@"; do
     case "$opt" in
       d)
         distro="$OPTARG";;
@@ -71,6 +78,8 @@ eval_opts() {
         rel_dir="$OPTARG";;
       s)
         src_dir="$OPTARG";;
+      x)
+        extra_repos+=("$OPTARG");;
       e)
         entrypoint="--entrypoint $OPTARG"
         if [ "$OPTARG" == "/bin/bash" ]; then
@@ -102,6 +111,12 @@ pull_docker() {
   docker pull "$image_name":"$image_ver"
 }
 
+build_extra_repos_cmd() {
+  for repo in "${extra_repos[@]}"; do
+    extra_repos_cmd+=("-e" "$repo")
+  done
+}
+
 run_docker() {
   docker run \
     $entrypoint \
@@ -115,7 +130,8 @@ build() {
   eval_opts "$@"
   git_in
   pull_docker
-  run_docker "-p" "$pkg_name"
+  build_extra_repos_cmd
+  run_docker "-p" "$pkg_name" "${extra_repos_cmd[@]}"
   clear_out
 }
 
