@@ -178,7 +178,11 @@ run() {
 pack_for_release() {
   eval_opts "$@"
   tar -cJf "$rel_dir"/"$distro"-"$image_ver"-"$ARCH".tar.xz -C "$output_dir" .
-  sudo rm -rf "$output_dir"
+  if [ -z "$output_dir" ] || [ "$output_dir" = "/" ]; then
+    echo "Error: refusing to remove output_dir ('$output_dir')." >&2
+    exit 1
+  fi
+  rm -rf "$output_dir"
 }
 
 print_version() {
