@@ -9,7 +9,7 @@ packages](https://www.debian.org/doc/manuals/maint-guide/).
 
 Most methods for building packages requires the developer to be on a Debian
 system in the unstable release, yet, with this script you can be in any release
-or any other operative system as long as you have docker and bash (which is the
+or any other operating system as long as you have docker and bash (which is the
 language the script is written in).
 
 Using it is quite simple, for building a package for debian unstable you would
@@ -31,7 +31,7 @@ your system this is more than enough.
 * [Adding extra repositories for build-time](#adding-extra-repositories-for-build-time)
 * [Why would I want to use docker for building packages?](#why-would-i-want-to-use-docker-for-building-packages)
 * [Building the non-standard way](#building-the-non-standard-way)
-* [How does it actually works? (In the inside)](#how-does-it-actually-works-in-the-inside)
+* [How does it actually work? (In the inside)](#how-does-it-actually-work-in-the-inside)
 * [License](#license)
 
 <!-- vim-markdown-toc -->
@@ -66,7 +66,7 @@ repositories on-the-fly. This would look like:
       -x "https://extra.repo.org/repo unstable main"
 
 You can see this is mostly the same string that you would put in your
-`/etc/apt/sources.list` but is missing the `deb ` at the beggining, and indeed
+`/etc/apt/sources.list` but is missing the `deb ` at the beginning, and indeed
 that's the case.
 
 You can add multiple extra repositories by calling `-x` several times, like:
@@ -105,7 +105,7 @@ will be on a clean slate.
 
 Using docker also means you don't need to have a host in the same operative
 system that the one for your package, so you can build for debian stable while
-being on debian unstable, or even another operative system altogether like
+being on debian unstable, or even another operating system altogether like
 macOS. You only need docker and bash.
 
 Building the non-standard way
@@ -127,12 +127,12 @@ set of applications up-to-date in different versions of debian and ubuntu, so
 with the help of this tool we would build the packages for each distro and
 release, then upload to a private repository and pass that to the clients.
 
-In most cases you won't need the non-standard way and you're good to go with
+In most cases you won't need the non-standard way and you're good to go without
 `-n` but in case you need it, it exists. This is an example of how a [git
 repository for the non-standard way would look
 like](https://github.com/resnullius/capstone.deb).
 
-How does it actually works? (In the inside)
+How does it actually work? (In the inside)
 -------------------------------------------
 
 The person reading this section is probably the curious that read the script and
