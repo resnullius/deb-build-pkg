@@ -77,7 +77,7 @@ eval_image_name() {
 }
 
 eval_opts() {
-  while getopts ":d:v:g:o:s:e:x:r:n:" opt "$@"; do
+  while getopts ":d:v:g:o:s:e:x:r:n" opt "$@"; do
     case "$opt" in
       d)
         distro="$OPTARG";;
