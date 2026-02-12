@@ -71,9 +71,11 @@ grab_pkg_name() {
 
 eval_image_name() {
   [ "$distro" = "ubuntu" ] && image_name="resnullius/ubuntu-devel"
-  if [ "$ARCH" != "x86_64" ]; then
-    image_name+="-armhf"
-  fi
+  case "$ARCH" in
+    x86_64)   ;;
+    aarch64)  image_name+="-arm64";;
+    *)        image_name+="-armhf";;
+  esac
 }
 
 eval_opts() {
