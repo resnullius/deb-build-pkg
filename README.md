@@ -154,5 +154,5 @@ it is even less things to write/call.
 License
 -------
 
-© 2016-2019, Jose-Luis Rivas `<me@ghostbar.co>`. Released under the MIT license
+© 2016-2026, Jose-Luis Rivas `<me@ghostbar.co>`. Released under the MIT license
 terms.
