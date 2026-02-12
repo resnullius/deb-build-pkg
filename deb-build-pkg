@@ -100,7 +100,7 @@ eval_opts() {
         if [ "$OPTARG" == "/bin/bash" ]; then
           entrypoint+=" -ti"
         fi
-        shift; shift;;
+        ;;
       \?)
         echo "Invalid option -$OPTARG was ignored." >&2;;
       :)
