@@ -49,7 +49,7 @@ declare src_dir="${SRC_DIR:-$PWD}"
 declare distro="${DISTRO:-debian}"
 declare image_name="${IMAGE_NAME:-resnullius/debian-devel}"
 declare image_ver="${IMAGE_VER:-unstable}"
-declare entrypoint
+declare -a entrypoint
 declare pkg_name
 declare non_standard=false
 declare -a extra_repos
@@ -99,9 +99,9 @@ eval_opts() {
       g)
         extra_gpgs+=("$OPTARG");;
       e)
-        entrypoint="--entrypoint $OPTARG"
+        entrypoint=("--entrypoint" "$OPTARG")
         if [ "$OPTARG" == "/bin/bash" ]; then
-          entrypoint+=" -ti"
+          entrypoint+=("-ti")
         fi
         ;;
       \?)
@@ -141,10 +141,9 @@ build_extra_gpgs_cmd() {
   done
 }
 
-# shellcheck disable=SC2086
 run_docker() {
   docker run \
-    $entrypoint \
+    "${entrypoint[@]}" \
     --rm \
     -v "$src_dir":/opt/src \
     -v "$output_dir":/opt/pkgs \
